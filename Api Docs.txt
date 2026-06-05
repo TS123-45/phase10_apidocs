@@ -1,0 +1,254 @@
+Perfect, Tony. Now I have your actual project structure, so let's integrate Swagger step by step.
+
+Step 1: Install Swagger Packages
+
+Open terminal in your project folder:
+
+npm install swagger-ui-express swagger-jsdoc
+
+
+---
+
+Step 2: Create swagger.js
+
+Create a new file in the root folder:
+
+project/
+│
+├── crudapi.js
+├── crudserver.js
+├── swagger.js   ← New
+└── ...
+
+Add:
+
+const swaggerJsDoc = require("swagger-jsdoc");
+
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "CRUD API",
+      version: "1.0.0",
+      description: "Simple CRUD API using Express and MySQL"
+    },
+    servers: [
+      {
+        url: "http://localhost:3000"
+      }
+    ]
+  },
+  apis: ["./crudapi.js"]
+};
+
+module.exports = swaggerJsDoc(options);
+
+
+---
+
+Step 3: Modify crudserver.js
+
+Add these two imports near the top:
+
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
+
+So the top becomes:
+
+const express = require("express");
+const path = require("path");
+const dotenv = require("dotenv");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
+
+const apiRoutes = require("./crudapi.js");
+
+
+---
+
+Step 4: Add Swagger Route
+
+Place this before app.listen():
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
+
+Your file will look like:
+
+app.use("/crudapi", apiRoutes);
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
+
+
+---
+
+Step 5: Document Your Routes
+
+Since you mounted:
+
+app.use("/crudapi", apiRoutes);
+
+all endpoints actually become:
+
+POST   /crudapi/posting
+GET    /crudapi/viewing
+PUT    /crudapi/updating/{id}
+DELETE /crudapi/deleting/{id}
+GET    /crudapi/testdb
+
+Notice the /crudapi prefix.
+
+
+---
+
+Step 6: Add Swagger Comment Above POST Route
+
+In crudapi.js, place this immediately above:
+
+router.post("/posting", async (req, res) => {
+
+/**
+ * @swagger
+ * /crudapi/posting:
+ *   post:
+ *     summary: Insert a new record
+ *     tags:
+ *       - CRUD
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               age:
+ *                 type: integer
+ *               city:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Data inserted successfully
+ */
+
+
+---
+
+Step 7: Above GET Route
+
+/**
+ * @swagger
+ * /crudapi/viewing:
+ *   get:
+ *     summary: Get all records
+ *     tags:
+ *       - CRUD
+ *     responses:
+ *       200:
+ *         description: List of records
+ */
+
+
+---
+
+Step 8: Above PUT Route
+
+/**
+ * @swagger
+ * /crudapi/updating/{id}:
+ *   put:
+ *     summary: Update a record
+ *     tags:
+ *       - CRUD
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               age:
+ *                 type: integer
+ *               city:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Data updated successfully
+ */
+
+
+---
+
+Step 9: Above DELETE Route
+
+/**
+ * @swagger
+ * /crudapi/deleting/{id}:
+ *   delete:
+ *     summary: Delete a record
+ *     tags:
+ *       - CRUD
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Data deleted successfully
+ */
+
+
+---
+
+Step 10: Above Database Test Route
+
+/**
+ * @swagger
+ * /crudapi/testdb:
+ *   get:
+ *     summary: Test database connection
+ *     tags:
+ *       - Database
+ *     responses:
+ *       200:
+ *         description: Database connected successfully
+ */
+
+
+---
+
+Step 11: Run the Server
+
+node crudserver.js
+
+Open:
+
+http://localhost:3000/api-docs
+
+You should see an interactive Swagger page with all 5 endpoints and a Try it out button for testing them.
+
+One important note: your repository screenshot shows a .env file committed to GitHub. In real projects, .env should not be pushed to GitHub. Add it to .gitignore before making the repository public.
