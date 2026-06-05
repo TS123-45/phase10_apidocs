@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Full CRUD in One Page</title>
+  </head>
+  <body>
+    <h1>CRUD Operations (One Page App)</h1>
+
+    <!-- CREATE -->
+    <h2>Create Data</h2>
+    <form id="createForm">
+      <input type="text" id="c_name" placeholder="Name" required /><br /><br />
+      <input type="number" id="c_age" placeholder="Age" required /><br /><br />
+      <input type="text" id="c_city" placeholder="City" required /><br /><br />
+      <button type="submit">Create</button>
+    </form>
+    <p id="createMsg"></p>
+
+    <hr />
+
+    <!-- READ -->
+    <h2>Read Data</h2>
+    <button onclick="loadData()">Load Table</button>
+    <table border="1" cellpadding="10">
+      <thead>
+        <tr>
+          <th>ID</th><th>Name</th><th>Age</th><th>City</th>
+        </tr>
+      </thead>
+      <tbody id="dataBody"></tbody>
+    </table>
+
+    <hr />
+
+    <!-- UPDATE -->
+    <h2>Update Data</h2>
+    <form id="updateForm">
+      <input type="number" id="u_id" placeholder="ID" required /><br /><br />
+      <input type="text" id="u_name" placeholder="New Name" /><br /><br />
+      <input type="number" id="u_age" placeholder="New Age" /><br /><br />
+      <input type="text" id="u_city" placeholder="New City" /><br /><br />
+      <button type="submit">Update</button>
+    </form>
+    <p id="updateMsg"></p>
+
+    <hr />
+
+    <!-- DELETE -->
+    <h2>Delete Data</h2>
+    <form id="deleteForm">
+      <input type="number" id="d_id" placeholder="ID" required /><br /><br />
+      <button type="submit">Delete</button>
+    </form>
+    <p id="deleteMsg"></p>
+
+    <script>
+      // CREATE
+      document.getElementById("createForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = {
+          name: document.getElementById("c_name").value,
+          age: document.getElementById("c_age").value,
+          city: document.getElementById("c_city").value,
+        };
+
+        const res = await fetch("/crudapi/posting", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+        document.getElementById("createMsg").innerText = result.message;
+      });
+
+      // READ
+      async function loadData() {
+        const res = await fetch("/crudapi/viewing");
+        const data = await res.json();
+
+        const body = document.getElementById("dataBody");
+        body.innerHTML = "";
+        data.forEach((row) => {
+          body.innerHTML += `
+            <tr>
+              <td>${row.id}</td>
+              <td>${row.name}</td>
+              <td>${row.age}</td>
+              <td>${row.city}</td>
+            </tr>
+          `;
+        });
+      }
+
+      // UPDATE
+      document.getElementById("updateForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("u_id").value;
+        const data = {
+          name: document.getElementById("u_name").value,
+          age: document.getElementById("u_age").value,
+          city: document.getElementById("u_city").value,
+        };
+
+        const res = await fetch(`/crudapi/updating/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+        document.getElementById("updateMsg").innerText = result.message;
+      });
+
+      // DELETE
+      document.getElementById("deleteForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("d_id").value;
+
+        const res = await fetch(`/crudapi/deleting/${id}`, { method: "DELETE" });
+        const result = await res.json();
+        document.getElementById("deleteMsg").innerText = result.message;
+      });
+    </script>
+  </body>
+</html>
